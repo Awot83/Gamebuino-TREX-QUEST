@@ -3,7 +3,17 @@
 //imports the Gamebuino library
 #include <Gamebuino.h>
 //creates a Gamebuino object named gb
+
+// TREX QUEST II (v1.5) 08/06/2017  By AWOT
+// todo : 
+// multiply tanks (increase by levels)
+// multiply cars (fun)
+// better tank sprite
+// level 2 : forced scrolling ?
+// obstacles + forced scrolling ? out of screen = dead
+
 Gamebuino gb;
+int CarY;
 int x = 10;
 int y = 10;
 int pomx = 30; // apple x position
@@ -11,6 +21,7 @@ int tankx = 0; // tank x pos
 int tanky = 20; // tank y pos
 int pomy = 30;  // appel Y pos
 int direc = 0;
+int carstate = 0;
 int statefire = 0;
 int tankstate = 0;
 int explode = 0;  // is tank exploded ?
@@ -18,95 +29,115 @@ int puissance = 11;    // power bar status
 int barredevie = 42; // life bar status
 int score = 0;
 int chilyrand = 0; // randomized 1/10 to have a chily instead of apple
-int activateRay=0; // used to know if chily is eaten to activate the ray
-int RayOrFireHitBox=16;  // used for the width of hitbox of the fire =16 or Ray= 88
-int leveln=0;  // level counter
-int SpeedUp=1; // speed multiplicateur
+int activateRay = 0; // used to know if chily is eaten to activate the ray
+int RayOrFireHitBox = 16; // used for the width of hitbox of the fire =16 or Ray= 88
+int leveln = 0; // level counter
+int SpeedUp = 1; // speed multiplicateur
+int Scrolling = 0; // scrolling of the buildings
+int Scrolling2 = 0; // scrolling of 1rst plan
+const byte CAR1[] PROGMEM = {24, 10, 0x7, 0xE0, 0x0, 0x7C, 0x3F, 0x80, 0x8C, 0x30, 0x40, 0xEC, 0x3D, 0x40, 0xEB, 0xFD, 0x40, 0x87, 0x30, 0x40, 0xFF, 0xFF, 0xC0, 0xFF, 0xFF, 0xC0, 0xEF, 0xFD, 0xC0, 0x7F, 0xFF, 0x80,};
+const byte CAR1X[] PROGMEM = {16, 7, 0x1F, 0x0, 0x71, 0xF0, 0x91, 0x88, 0x9F, 0x88, 0xFF, 0xF8, 0xDF, 0xD8, 0x70, 0x70,};
+const byte CAR2[] PROGMEM = {24, 12, 0x3, 0xE0, 0x0, 0x2, 0x30, 0x0, 0x7E, 0x3F, 0x0, 0x82, 0x31, 0x80, 0xBE, 0x30, 0x80, 0xBE, 0x30, 0x80, 0xBE, 0xD1, 0x80, 0x80, 0xE0, 0x80, 0x80, 0x0, 0x80, 0xB8, 0x1D, 0x80, 0xEF, 0xF7, 0x80, 0x7F, 0xFF, 0x0,};
+const byte CAR2X[] PROGMEM = {16, 8, 0xE, 0x0, 0x7B, 0xC0, 0x8B, 0x20, 0x8B, 0x20, 0xFF, 0x20, 0xFF, 0xE0, 0xDF, 0x60, 0x71, 0xC0,};
+const byte CAR3[] PROGMEM = {24, 12, 0x1, 0x80, 0x0, 0x6, 0xC0, 0x0, 0x79, 0x3F, 0x80, 0xE9, 0xB7, 0xC0, 0xE8, 0x33, 0xC0, 0xE6, 0xD7, 0xC0, 0xEE, 0xEF, 0xC0, 0x91, 0x9, 0x40, 0xF9, 0x2F, 0xC0, 0xFD, 0xF, 0xC0, 0xEF, 0xFD, 0xC0, 0x7F, 0xFF, 0x80,};
+const byte CAR3X[] PROGMEM = {16, 8, 0xC, 0x0, 0x6B, 0xC0, 0xEA, 0xE0, 0xD6, 0xE0, 0xD5, 0xE0, 0xE9, 0xE0, 0xF9, 0xE0, 0x7F, 0xC0,};
+const byte CAR4[] PROGMEM = {24, 14, 0x0, 0x30, 0x0, 0xFF, 0xE8, 0x0, 0x80, 0x3C, 0x0, 0x80, 0x3F, 0x0, 0x80, 0x2D, 0x80, 0xD1, 0x7C, 0x80, 0x80, 0xC, 0x80, 0x89, 0xB4, 0x80, 0x9D, 0xB8, 0x80, 0x88, 0x1, 0x80, 0xB0, 0x1C, 0x80, 0xA8, 0x15, 0x80, 0xFF, 0xFF, 0x80, 0x7F, 0xFF, 0x0,};
+const byte CAR4X[] PROGMEM = {16, 9, 0x3, 0x0, 0xFE, 0x80, 0x83, 0xC0, 0xA2, 0xA0, 0xF5, 0xA0, 0xA1, 0xE0, 0xF1, 0xE0, 0xDF, 0x60, 0x71, 0xC0,};
+const byte CAR5[] PROGMEM = {24, 10, 0xF, 0xC0, 0x0, 0x30, 0x7E, 0x0, 0x48, 0x61, 0x80, 0xA8, 0x60, 0x40, 0xA5, 0xA0, 0x40, 0x8D, 0xC3, 0x40, 0x80, 0x0, 0x40, 0xB8, 0xE, 0xC0, 0xEF, 0xFB, 0xC0, 0x7F, 0xFF, 0x80,};
+const byte CAR5X[] PROGMEM = {16, 6, 0x3C, 0x0, 0x67, 0xC0, 0xDE, 0x20, 0xFC, 0xE0, 0xBF, 0xA0, 0xE0, 0xE0,};
+const byte CAR6[] PROGMEM = {2, 2, 0, 0, 0};
+const byte CarExplode[] PROGMEM = {24, 14, B00010000, B00000100, B00000000, B00110010, B01011000, B00000000, B00011011, B00111111, B00000000, B01001110, B01111010, B00000000, B00010110, B11010001, B10000000, B01011011, B00110011, B00000000, B01001111, B11100111, B00000000, B01101100, B11011111, B00000000, B00111111, B01111010, B00000000, B00101111, B11101010, B10000000, B10001011, B10010101, B00000000, B11100101, B00100111, B10000000, B00110101, B11101110, B00000000, B00000110, B01101000, B00000000,};
+const byte cloud1[] PROGMEM = {88, 27, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x7F, 0x80, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0xE0, 0x70, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x3, 0x0, 0xC, 0x1F, 0xFF, 0x0, 0x0, 0x0, 0x0, 0xF, 0xF9, 0xC6, 0x0, 0x3, 0x38, 0x0, 0xC3, 0xFF, 0xE0, 0x7F, 0x70, 0xE, 0x6C, 0x0, 0x1, 0xE0, 0x0, 0x6E, 0x0, 0x31, 0xE0, 0xC0, 0x4, 0x18, 0x0, 0x0, 0x80, 0x7F, 0xD8, 0x0, 0x17, 0x0, 0x0, 0xF, 0x80, 0xF, 0xF0, 0x3, 0x80, 0x70, 0x0, 0x8, 0x0, 0x0, 0x38, 0x3F, 0x30, 0x3F, 0x6, 0x0, 0x1C, 0x1F, 0xF0, 0x0, 0xF8, 0x60, 0x1, 0xC0, 0x0, 0x9C, 0x0, 0x6, 0x70, 0xE, 0x7, 0xE, 0xC0, 0x0, 0x60, 0x0, 0x70, 0x0, 0x0, 0xC0, 0x3, 0x1C, 0x3, 0x80, 0x0, 0x20, 0x0, 0x0, 0x0, 0x1, 0x80, 0x0, 0xB0, 0x1, 0x30, 0x0, 0x1F, 0xC0, 0x0, 0x0, 0x7F, 0x0, 0x0, 0x60, 0xE0, 0xCC, 0x0, 0x38, 0x78, 0x7F, 0x1, 0xC0, 0xE0, 0x0, 0xFE, 0x11, 0x3, 0x3, 0xC0, 0x1F, 0xC3, 0xE3, 0x80, 0x30, 0xF, 0x3, 0xA, 0x1, 0xFF, 0x0, 0x0, 0x0, 0x7E, 0x0, 0xF, 0xFC, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,};
+const byte cloud1b[] PROGMEM = {88, 27, 0xF, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1F, 0xFF, 0xFC, 0x0, 0x0, 0x7F, 0xFE, 0x0, 0x0, 0x0, 0x1F, 0xFF, 0xFF, 0xFF, 0x80, 0x78, 0xFF, 0xFF, 0x0, 0x1F, 0xFF, 0xFF, 0xFF, 0xF0, 0x3, 0xF3, 0xFC, 0x0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x80, 0x1F, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFC, 0x0, 0xF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0x7F, 0xFF, 0x80, 0x0, 0x0, 0x0, 0x1F, 0xFF, 0xFF, 0xFF, 0x80, 0x0, 0x3F, 0x0, 0x3, 0xFF, 0xE0, 0x0, 0x0, 0x0, 0x7F, 0x0, 0x3F, 0xF8, 0x0, 0xF, 0xFF, 0xFE, 0x0, 0x0, 0x0, 0x3F, 0x7, 0xFF, 0xE0, 0x7, 0xFF, 0xFF, 0xFF, 0x80, 0x0, 0x0, 0x7F, 0x1F, 0xFF, 0xC1, 0xFF, 0xFF, 0xF8, 0x7, 0xE0, 0xF8, 0x7, 0xFE, 0x7F, 0xC0, 0x3, 0xFF, 0xFC, 0xF0, 0x1, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xC0, 0x7F, 0xFF, 0xE0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF8, 0xC0, 0x3, 0xFF, 0xFF, 0x0, 0x3F, 0xFF, 0xFF, 0xFF, 0xFF, 0xF0, 0x0, 0xF, 0xF0, 0x0, 0x0, 0x0, 0x0, 0x7F, 0xE1, 0xFF, 0xC0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,};
+const byte horizon1[] PROGMEM = {88, 10, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xF8, 0x0, 0x1F, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1F, 0x1, 0x6, 0x0, 0xE0, 0x7B, 0xBE, 0x3B, 0x80, 0x43, 0xDF, 0x20, 0xE1, 0x57, 0x1, 0x2A, 0x84, 0x41, 0x44, 0x60, 0xA4, 0x20, 0xEA, 0xF1, 0x5, 0x81, 0x60, 0xA6, 0xD5, 0x66, 0x63, 0xB6, 0xAA, 0xE0, 0x8B, 0x55, 0x77, 0x2A, 0x84, 0x41, 0x44, 0x66, 0xB4, 0x20, 0xEF, 0x85, 0x5, 0x49, 0x60, 0xA6, 0xD5, 0x44, 0x68, 0x1E, 0xAA, 0xF8, 0x5, 0x55, 0x69, 0x2A, 0x84, 0x41, 0x66, 0x6A, 0x9C, 0x20, 0xA, 0x45, 0x5, 0x49, 0x60, 0xA6, 0xD5, 0x44, 0x78, 0x1E, 0xAA, 0x8, 0x5, 0x55, 0x69, 0x2A, 0x84, 0x41, 0x44, 0x2, 0x9C, 0x20, 0xA, 0x45, 0x0, 0x48, 0x20, 0xA4, 0x55,};
+const byte horizon2[] PROGMEM = {88, 10, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x40, 0x0, 0x10, 0x0, 0x4, 0x0, 0x1, 0x0, 0x0, 0x40, 0x0, 0x80, 0x0, 0x20, 0x0, 0x8, 0x0, 0x2, 0x0, 0x0, 0x80, 0x0, 0x80, 0x0, 0x20, 0x0, 0x8, 0x0, 0x2, 0x0, 0x0, 0x80, 0x0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,};
+const byte horizon3[] PROGMEM = {88, 18, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x7C, 0x7C, 0x7C, 0x7C, 0x7C, 0x7C, 0x7C, 0x7C, 0x7C, 0x7C, 0x7C, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x7, 0x0, 0x0, 0x0, 0x0, 0xE0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x2, 0x0, 0x0, 0x0, 0x0, 0x40, 0x0, 0x0, 0x0, 0x0, 0x0, 0x2, 0x0, 0x0, 0x80, 0x0, 0x40, 0x0, 0x0, 0x0, 0x0, 0x10, 0x2, 0x0, 0x0, 0x80, 0x0, 0x40, 0x0, 0x4, 0x0, 0x8, 0x10, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF7, 0x7F, 0xFF, 0xFF, 0xE3, 0xFF,};
 
-const byte GAMEOVER[] PROGMEM = {64,36,
-B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,
-B11111111,B11111111,B11111111,B11111111,B11111111,B11111111,B11111111,B11111110,
-B10000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000010,
-B10000000,B01110000,B10000000,B00111000,B00001110,B01000101,B11011100,B00000010,
-B10000000,B10000001,B01000101,B00100000,B00010001,B01000101,B00010010,B00000010,
-B10001000,B10000011,B11001010,B10110000,B00010101,B01000101,B10011110,B00100010,
-B10011100,B10011010,B00101000,B10100000,B00010101,B00101001,B00010100,B01110010,
-B10001000,B10001010,B00101000,B10100000,B00010001,B00111001,B00010010,B00100010,
-B10000000,B11111010,B00101000,B10111000,B00001110,B00010001,B11010010,B00000010,
-B10000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000010,
-B10000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000010,
-B11111111,B11111111,B11111111,B11111111,B11111111,B11111111,B11111111,B11111110,
-B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,
-B00000000,B00000000,B00000001,B11100000,B00000000,B00000000,B00000000,B00000000,
-B00000000,B00000000,B00000110,B00011000,B00000000,B00000000,B00000000,B00000000,
-B01110110,B01110110,B11000101,B00001000,B00000000,B00000000,B00000001,B11111100,
-B01010101,B01100100,B10001001,B11000100,B00000000,B00000000,B00000001,B11111100,
-B01110110,B01000010,B01001001,B00100100,B00000000,B00000000,B00000001,B11111110,
-B01000101,B01110110,B11000101,B11001000,B00000000,B00000000,B00000001,B11111110,
-B00000000,B00000000,B00000110,B00011000,B00000000,B00000000,B00001101,B11111110,
-B00000000,B00000000,B00000001,B11100000,B00000000,B00000000,B00001101,B11111110,
-B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00001101,B11111110,
-B00000000,B00000000,B00000000,B00000000,B00000000,B00000011,B10001111,B11111110,
-B00000000,B00000000,B00000000,B00000000,B00000000,B00000001,B11001111,B11101010,
-B00000000,B00000000,B00000000,B00000000,B00111000,B00001100,B11001111,B11110110,
-B00000000,B00000000,B00000000,B00000000,B00110000,B00000111,B11111111,B11101010,
-B00000000,B00000000,B00000000,B00000000,B00111100,B11111111,B11111111,B11111110,
-B00000000,B00000000,B00000000,B00000000,B00011111,B11111111,B11111111,B11111110,
-B00000000,B00000000,B00000000,B00000000,B00011111,B11111111,B11111111,B11111110,
-B00000000,B00000000,B00000000,B00000000,B00011111,B11111111,B11111111,B11111100,
-B00000000,B00000000,B00000000,B00000000,B00001111,B11111111,B11111111,B11111100,
-B00000000,B00000000,B00000000,B00000000,B00000111,B11111111,B11111111,B11111000,
-B00100100,B01001011,B10011001,B10010110,B00000111,B11111111,B11111100,B00000000,
-B01010101,B01010101,B00001010,B01010010,B00001111,B10001111,B11111001,B11110000,
-B01010011,B10001001,B00001101,B10010010,B00011111,B11111000,B01111011,B11111100,
-B00000000,B00000000,B00000000,B00000000,B01111001,B11111111,B11110000,B00000000,
-};
 
-const byte logo2[] PROGMEM = {88,43,
-B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B11000000,B00000000,B00000000,B00000000,B00000000,
-B00000000,B00000000,B00001111,B11111111,B11111110,B00000001,B10001000,B00000010,B00000000,B00000000,B00000000,
-B00000000,B00000011,B11111111,B11111111,B11111111,B00000011,B00011000,B11000110,B10000000,B00000000,B00000000,
-B00000000,B00011111,B11111111,B11111111,B11111111,B10000110,B00110001,B10001101,B10000000,B00011100,B00000000,
-B00000000,B01111111,B11111111,B11111111,B11111111,B10001110,B01100011,B10011011,B00000000,B01100000,B00000000,
-B00000000,B11111111,B11111111,B11111111,B11111111,B10001100,B01000111,B00100000,B00110001,B11000000,B00000000,
-B00000000,B11111111,B11111111,B11111111,B11111111,B10011000,B00111111,B00000000,B11110110,B00000011,B10000000,
-B00000001,B11111100,B00011111,B11111111,B11111111,B10011000,B01111111,B11111111,B11100100,B00001111,B00000000,
-B00000001,B11111100,B00011111,B11111111,B11111111,B10000000,B11110011,B11111111,B11000000,B01111110,B01100000,
-B00000001,B11111100,B00011111,B11111111,B11111111,B10000011,B11100111,B11000000,B00000111,B11111001,B11110000,
-B00000001,B11111100,B00011111,B11111111,B11111111,B00001111,B11001111,B11111111,B11111111,B11111111,B11110000,
-B00000001,B11111111,B11111111,B11111111,B11111111,B00111100,B00111111,B11111111,B10000000,B00000000,B00000000,
-B00000001,B11111111,B11111111,B11111111,B11111111,B00111111,B11111111,B00000011,B11111111,B11111111,B11110000,
-B00000001,B11111111,B11111111,B11111111,B11111110,B00111011,B11111111,B11111111,B11111111,B11111111,B11110000,
-B00000001,B11111111,B11111111,B11111111,B11111000,B01100010,B00000111,B11111111,B11111111,B11111111,B11110000,
-B00000001,B11111111,B11111111,B11111111,B00000000,B11111111,B11111111,B11111100,B00000000,B00000000,B00000000,
-B00000001,B11111111,B11111111,B11111100,B00011111,B10001111,B11111111,B11111111,B11111111,B11111111,B11110000,
-B00000001,B11111111,B11111111,B11110000,B01111111,B11111111,B11111111,B11111111,B11111111,B11111111,B11110000,
-B00000001,B11111111,B11111111,B11110001,B11111100,B11111111,B11000000,B00000000,B00000000,B00000000,B00000000,
-B00000001,B11111111,B11111111,B11100111,B10000111,B10000000,B00000000,B00000000,B00000000,B00000000,B00000000,
-B00000001,B11111111,B11111111,B11100111,B11111111,B10000000,B00000000,B00000000,B00000000,B00000000,B00000000,
-B00000011,B11111111,B11111111,B11100001,B11111110,B11111110,B00000000,B00011111,B11111111,B11111111,B11110000,
-B00000011,B11111111,B11111111,B11100000,B00111111,B01111111,B11111111,B11111111,B11111111,B11111111,B11110000,
-B00000111,B11111111,B11111111,B11111000,B00011111,B10011111,B11111111,B11111111,B11111111,B11111111,B11110000,
-B00000111,B11111111,B11111111,B11111111,B11101111,B11111110,B00000000,B01111000,B00000000,B00000000,B01110000,
-B00001111,B11111111,B11111111,B11111111,B11100111,B11111111,B11111111,B11111111,B11111111,B11111111,B11110000,
-B00011111,B11111111,B11111111,B11111111,B11100011,B11110011,B11111111,B11111111,B11111111,B11111111,B11110000,
-B00111111,B11111111,B11111111,B11111100,B00000011,B11111001,B11110001,B11100000,B01001111,B11111011,B10010000,
-B11111111,B11111111,B11111111,B10000000,B00000001,B10111110,B01111110,B00111111,B00111000,B01111111,B11000000,
-B11111111,B11111111,B11111111,B00000000,B00000001,B10011110,B01111111,B11111111,B00000110,B01111110,B11100000,
-B11111111,B11111111,B11111111,B00000000,B00000001,B11011111,B00001111,B11110111,B11100011,B10001111,B11100000,
-B11111111,B11111111,B11111111,B00000000,B00000001,B11001111,B10001011,B00111011,B11111100,B11000110,B01100000,
-B11111111,B11111111,B11111111,B00000000,B00000000,B01100011,B11000001,B10011000,B11111111,B00000111,B00100000,
-B11111111,B11111111,B11111111,B00000000,B00000000,B00110000,B11110000,B11000110,B00000111,B11000011,B00000000,
-B11111111,B11111111,B11111111,B11111111,B10000000,B00011011,B00111000,B01100011,B00000000,B11100000,B00000000,
-B11111111,B11111111,B11111111,B11111111,B11000000,B00001001,B10001100,B00100001,B11000000,B00000000,B00000000,
-B11111111,B11111111,B11111111,B11111111,B11000000,B00001000,B10000110,B00010000,B01000000,B00000000,B00000000,
-B11111111,B11111111,B11111111,B11111110,B11000000,B00001100,B11000010,B00000000,B00000000,B00000000,B00000000,
-B11111111,B11111111,B11111111,B11100110,B11000000,B00000100,B01100011,B00000000,B00000000,B00000000,B00000000,
-B11111111,B11111111,B11100000,B01100110,B00000000,B00000100,B00011000,B00000000,B00000000,B00000000,B00000000,
-B11111111,B11111111,B11000000,B00110000,B00000000,B00000110,B00001100,B00000000,B00000000,B00000000,B00000000,
-B11111111,B11111111,B11000000,B00000000,B00000000,B00000000,B00000110,B00000000,B00000000,B00000000,B00000000,
-B11111111,B11111111,B11000000,B00000000,B00000000,B00000000,B00000010,B00000000,B00000000,B00000000,B00000000,
-};
+const byte GAMEOVER[] PROGMEM = {64, 36,
+                                 B00000000, B00000000, B00000000, B00000000, B00000000, B00000000, B00000000, B00000000,
+                                 B11111111, B11111111, B11111111, B11111111, B11111111, B11111111, B11111111, B11111110,
+                                 B10000000, B00000000, B00000000, B00000000, B00000000, B00000000, B00000000, B00000010,
+                                 B10000000, B01110000, B10000000, B00111000, B00001110, B01000101, B11011100, B00000010,
+                                 B10000000, B10000001, B01000101, B00100000, B00010001, B01000101, B00010010, B00000010,
+                                 B10001000, B10000011, B11001010, B10110000, B00010101, B01000101, B10011110, B00100010,
+                                 B10011100, B10011010, B00101000, B10100000, B00010101, B00101001, B00010100, B01110010,
+                                 B10001000, B10001010, B00101000, B10100000, B00010001, B00111001, B00010010, B00100010,
+                                 B10000000, B11111010, B00101000, B10111000, B00001110, B00010001, B11010010, B00000010,
+                                 B10000000, B00000000, B00000000, B00000000, B00000000, B00000000, B00000000, B00000010,
+                                 B10000000, B00000000, B00000000, B00000000, B00000000, B00000000, B00000000, B00000010,
+                                 B11111111, B11111111, B11111111, B11111111, B11111111, B11111111, B11111111, B11111110,
+                                 B00000000, B00000000, B00000000, B00000000, B00000000, B00000000, B00000000, B00000000,
+                                 B00000000, B00000000, B00000001, B11100000, B00000000, B00000000, B00000000, B00000000,
+                                 B00000000, B00000000, B00000110, B00011000, B00000000, B00000000, B00000000, B00000000,
+                                 B01110110, B01110110, B11000101, B00001000, B00000000, B00000000, B00000001, B11111100,
+                                 B01010101, B01100100, B10001001, B11000100, B00000000, B00000000, B00000001, B11111100,
+                                 B01110110, B01000010, B01001001, B00100100, B00000000, B00000000, B00000001, B11111110,
+                                 B01000101, B01110110, B11000101, B11001000, B00000000, B00000000, B00000001, B11111110,
+                                 B00000000, B00000000, B00000110, B00011000, B00000000, B00000000, B00001101, B11111110,
+                                 B00000000, B00000000, B00000001, B11100000, B00000000, B00000000, B00001101, B11111110,
+                                 B00000000, B00000000, B00000000, B00000000, B00000000, B00000000, B00001101, B11111110,
+                                 B00000000, B00000000, B00000000, B00000000, B00000000, B00000011, B10001111, B11111110,
+                                 B00000000, B00000000, B00000000, B00000000, B00000000, B00000001, B11001111, B11101010,
+                                 B00000000, B00000000, B00000000, B00000000, B00111000, B00001100, B11001111, B11110110,
+                                 B00000000, B00000000, B00000000, B00000000, B00110000, B00000111, B11111111, B11101010,
+                                 B00000000, B00000000, B00000000, B00000000, B00111100, B11111111, B11111111, B11111110,
+                                 B00000000, B00000000, B00000000, B00000000, B00011111, B11111111, B11111111, B11111110,
+                                 B00000000, B00000000, B00000000, B00000000, B00011111, B11111111, B11111111, B11111110,
+                                 B00000000, B00000000, B00000000, B00000000, B00011111, B11111111, B11111111, B11111100,
+                                 B00000000, B00000000, B00000000, B00000000, B00001111, B11111111, B11111111, B11111100,
+                                 B00000000, B00000000, B00000000, B00000000, B00000111, B11111111, B11111111, B11111000,
+                                 B00100100, B01001011, B10011001, B10010110, B00000111, B11111111, B11111100, B00000000,
+                                 B01010101, B01010101, B00001010, B01010010, B00001111, B10001111, B11111001, B11110000,
+                                 B01010011, B10001001, B00001101, B10010010, B00011111, B11111000, B01111011, B11111100,
+                                 B00000000, B00000000, B00000000, B00000000, B01111001, B11111111, B11110000, B00000000,
+                                };
+
+const byte logo2[] PROGMEM = {88, 43,
+                              B00000000, B00000000, B00000000, B00000000, B00000000, B00000000, B11000000, B00000000, B00000000, B00000000, B00000000,
+                              B00000000, B00000000, B00001111, B11111111, B11111110, B00000001, B10001000, B00000010, B00000000, B00000000, B00000000,
+                              B00000000, B00000011, B11111111, B11111111, B11111111, B00000011, B00011000, B11000110, B10000000, B00000000, B00000000,
+                              B00000000, B00011111, B11111111, B11111111, B11111111, B10000110, B00110001, B10001101, B10000000, B00011100, B00000000,
+                              B00000000, B01111111, B11111111, B11111111, B11111111, B10001110, B01100011, B10011011, B00000000, B01100000, B00000000,
+                              B00000000, B11111111, B11111111, B11111111, B11111111, B10001100, B01000111, B00100000, B00110001, B11000000, B00000000,
+                              B00000000, B11111111, B11111111, B11111111, B11111111, B10011000, B00111111, B00000000, B11110110, B00000011, B10000000,
+                              B00000001, B11111100, B00011111, B11111111, B11111111, B10011000, B01111111, B11111111, B11100100, B00001111, B00000000,
+                              B00000001, B11111100, B00011111, B11111111, B11111111, B10000000, B11110011, B11111111, B11000000, B01111110, B01100000,
+                              B00000001, B11111100, B00011111, B11111111, B11111111, B10000011, B11100111, B11000000, B00000111, B11111001, B11110000,
+                              B00000001, B11111100, B00011111, B11111111, B11111111, B00001111, B11001111, B11111111, B11111111, B11111111, B11110000,
+                              B00000001, B11111111, B11111111, B11111111, B11111111, B00111100, B00111111, B11111111, B10000000, B00000000, B00000000,
+                              B00000001, B11111111, B11111111, B11111111, B11111111, B00111111, B11111111, B00000011, B11111111, B11111111, B11110000,
+                              B00000001, B11111111, B11111111, B11111111, B11111110, B00111011, B11111111, B11111111, B11111111, B11111111, B11110000,
+                              B00000001, B11111111, B11111111, B11111111, B11111000, B01100010, B00000111, B11111111, B11111111, B11111111, B11110000,
+                              B00000001, B11111111, B11111111, B11111111, B00000000, B11111111, B11111111, B11111100, B00000000, B00000000, B00000000,
+                              B00000001, B11111111, B11111111, B11111100, B00011111, B10001111, B11111111, B11111111, B11111111, B11111111, B11110000,
+                              B00000001, B11111111, B11111111, B11110000, B01111111, B11111111, B11111111, B11111111, B11111111, B11111111, B11110000,
+                              B00000001, B11111111, B11111111, B11110001, B11111100, B11111111, B11000000, B00000000, B00000000, B00000000, B00000000,
+                              B00000001, B11111111, B11111111, B11100111, B10000111, B10000000, B00000000, B00000000, B00000000, B00000000, B00000000,
+                              B00000001, B11111111, B11111111, B11100111, B11111111, B10000000, B00000000, B00000000, B00000000, B00000000, B00000000,
+                              B00000011, B11111111, B11111111, B11100001, B11111110, B11111110, B00000000, B00011111, B11111111, B11111111, B11110000,
+                              B00000011, B11111111, B11111111, B11100000, B00111111, B01111111, B11111111, B11111111, B11111111, B11111111, B11110000,
+                              B00000111, B11111111, B11111111, B11111000, B00011111, B10011111, B11111111, B11111111, B11111111, B11111111, B11110000,
+                              B00000111, B11111111, B11111111, B11111111, B11101111, B11111110, B00000000, B01111000, B00000000, B00000000, B01110000,
+                              B00001111, B11111111, B11111111, B11111111, B11100111, B11111111, B11111111, B11111111, B11111111, B11111111, B11110000,
+                              B00011111, B11111111, B11111111, B11111111, B11100011, B11110011, B11111111, B11111111, B11111111, B11111111, B11110000,
+                              B00111111, B11111111, B11111111, B11111100, B00000011, B11111001, B11110001, B11100000, B01001111, B11111011, B10010000,
+                              B11111111, B11111111, B11111111, B10000000, B00000001, B10111110, B01111110, B00111111, B00111000, B01111111, B11000000,
+                              B11111111, B11111111, B11111111, B00000000, B00000001, B10011110, B01111111, B11111111, B00000110, B01111110, B11100000,
+                              B11111111, B11111111, B11111111, B00000000, B00000001, B11011111, B00001111, B11110111, B11100011, B10001111, B11100000,
+                              B11111111, B11111111, B11111111, B00000000, B00000001, B11001111, B10001011, B00111011, B11111100, B11000110, B01100000,
+                              B11111111, B11111111, B11111111, B00000000, B00000000, B01100011, B11000001, B10011000, B11111111, B00000111, B00100000,
+                              B11111111, B11111111, B11111111, B00000000, B00000000, B00110000, B11110000, B11000110, B00000111, B11000011, B00000000,
+                              B11111111, B11111111, B11111111, B11111111, B10000000, B00011011, B00111000, B01100011, B00000000, B11100000, B00000000,
+                              B11111111, B11111111, B11111111, B11111111, B11000000, B00001001, B10001100, B00100001, B11000000, B00000000, B00000000,
+                              B11111111, B11111111, B11111111, B11111111, B11000000, B00001000, B10000110, B00010000, B01000000, B00000000, B00000000,
+                              B11111111, B11111111, B11111111, B11111110, B11000000, B00001100, B11000010, B00000000, B00000000, B00000000, B00000000,
+                              B11111111, B11111111, B11111111, B11100110, B11000000, B00000100, B01100011, B00000000, B00000000, B00000000, B00000000,
+                              B11111111, B11111111, B11100000, B01100110, B00000000, B00000100, B00011000, B00000000, B00000000, B00000000, B00000000,
+                              B11111111, B11111111, B11000000, B00110000, B00000000, B00000110, B00001100, B00000000, B00000000, B00000000, B00000000,
+                              B11111111, B11111111, B11000000, B00000000, B00000000, B00000000, B00000110, B00000000, B00000000, B00000000, B00000000,
+                              B11111111, B11111111, B11000000, B00000000, B00000000, B00000000, B00000010, B00000000, B00000000, B00000000, B00000000,
+                             };
 
 const byte logo[] PROGMEM = {64, 36,
                              B00000000, B00000000, B00000000, B00000000, B00000000, B00000000, B00000000, B00000000,
@@ -476,6 +507,18 @@ const byte heart[] PROGMEM = {8, 8,
                              };
 
 // array containing the different sprites
+
+
+#define NUM_SPRITESCARS 6
+const byte* cars[NUM_SPRITESCARS] = {
+  CAR1, //0
+  CAR2, //1
+  CAR3, //2
+  CAR4, //3
+  CAR5, //4
+  CAR6, //5 empty sprite
+};
+
 #define NUM_SPRITES 4
 const byte* sprites[NUM_SPRITES] = {
   trex1, //0
@@ -520,13 +563,14 @@ void setup() {
 
 void initGame()
 {
-  barredevie=42;
+  barredevie = 42;
   tankx = 0; // re init tank
-  tanky = random(10, LCDHEIGHT - 8);   //re init tank y
+  tanky = random(10, LCDHEIGHT - 10);   //re init tank y
   score = 0; // re init score
   puissance = 11; //re init puissance bar
-  leveln=1;
-  SpeedUp=1;
+  leveln = 1;
+  SpeedUp = 1;
+  CarY = random(35, LCDHEIGHT - 8); //re init CAR  y
 }
 
 
@@ -549,197 +593,269 @@ void loop() {
   //returns true when it's time to render a new frame (20 times/second)
 
   if (gb.update()) {
+
+    gb.display.drawBitmap(Scrolling, 8, horizon1);
+    gb.display.drawBitmap(Scrolling + LCDWIDTH, 8, horizon1);
+    gb.display.drawBitmap(Scrolling - LCDWIDTH, 8, horizon1);
+
+
+    gb.display.drawBitmap(Scrolling2, 30, horizon3);
+    gb.display.drawBitmap(Scrolling2 + LCDWIDTH, 30, horizon3);
+    gb.display.drawBitmap(Scrolling2 - LCDWIDTH, 30, horizon3);
+
+    gb.display.setColor(WHITE, WHITE);
+    gb.display.fillRect(Scrolling2 + LCDWIDTH + 5+1,CarY+1, 24, 9);
+    gb.display.setColor(BLACK, BLACK);
+    gb.display.drawBitmap(Scrolling2 + LCDWIDTH + 5, CarY, cars[carstate]);
+    //gb.display.drawBitmap(Scrolling2 + LCDWIDTH, CarY, CAR1X);
+    //gb.display.drawBitmap(Scrolling2 - LCDWIDTH, CarY, CAR1X);
+
+
+    // re init scrolling
+    if (Scrolling2 == - 2 * LCDWIDTH) {
+      Scrolling2 = 0;
+      CarY = random(32, LCDHEIGHT - 4); //re init CAR  y
+      pomx = random(10, LCDWIDTH);
+      pomy = random(20, LCDHEIGHT - 15);
+      carstate = random(0, 4);
+    }
+
+    if (Scrolling == - 2 * LCDWIDTH) {
+      Scrolling = 0;  //a ajuster pour éviter le saut
+    }
+
+
     if (barredevie <= 59) {
 
-        // exit game
+      // exit game
       if (gb.buttons.pressed(BTN_C)) {
         setup();
       }
-      
-    //draw the field and barre de vie puissance
-    gb.display.drawLine(0, 15, LCDWIDTH , 15);
 
-    //barre de puissance
-    gb.display.drawRect(LCDWIDTH - 30, 2, 20, 3);
-    gb.display.drawLine(LCDWIDTH - 30, 3, LCDWIDTH - puissance , 3);
+      //draw the field and barre de vie puissance
+      gb.display.drawLine(0, 18, LCDWIDTH , 18);
 
-    // barre de vie
-    gb.display.drawRect(LCDWIDTH - 60, 2, 20, 3);
-    gb.display.drawLine(LCDWIDTH - 60, 3, LCDWIDTH - barredevie , 3);
+      //barre de puissance
+      gb.display.drawRect(LCDWIDTH - 30, 2, 20, 3);
+      gb.display.drawLine(LCDWIDTH - 30, 3, LCDWIDTH - puissance , 3);
 
-    //emplacement du score
-    gb.display.cursorX = 1;
-    gb.display.cursorY = 0;
-    gb.display.println(score);
+      // barre de vie
+      gb.display.drawRect(LCDWIDTH - 60, 2, 20, 3);
+      gb.display.drawLine(LCDWIDTH - 60, 3, LCDWIDTH - barredevie , 3);
 
-    gb.display.drawBitmap(x, y, sprites[direc]);
-
-    
-    if (chilyrand == 5) {
-      gb.display.drawBitmap(pomx, pomy, chily);
-    }
-    else {
-      gb.display.drawBitmap(pomx, pomy, pom);
-    }
-
-    gb.display.drawBitmap(tankx, tanky, tank[tankstate]);
-    gb.display.drawBitmap(LCDWIDTH - 69, 0, heart);
-    gb.display.drawBitmap(LCDWIDTH - 39, 0, minipom);
-
-    explode = 0;
+      //emplacement du score
+      gb.display.cursorX = 1;
+      gb.display.cursorY = 0;
+      gb.display.println(score);
 
 
-    // ------- Controls  ----------------------------------------------
 
-    if (gb.buttons.repeat(BTN_RIGHT, 1)) {
 
-      if (x < LCDWIDTH - 16) {
-        x = x + 1;
+      //POM OR CHILLY
+      if (chilyrand == 5) {
+        gb.display.drawBitmap(pomx, pomy, chily);
       }
-      direc = direc + 2;
-      if ( direc > 2) {
-        direc = 0;
+      else {
+        gb.display.drawBitmap(pomx, pomy, pom);
       }
-    }
-    if (gb.buttons.repeat(BTN_LEFT, 1)) {
-      if (x > 0) {
-        x = x - 1;
-      }
-      direc = direc + 2;
-      if ( direc > 3) {
-        direc = 1;
-      }
-    }
-    if (gb.buttons.repeat(BTN_DOWN, 1)) {
-      if (y < LCDHEIGHT - 8) {
-        y = y + 1;
-      }
-    }
-    if (gb.buttons.repeat(BTN_UP, 1)) {
-      if (y > 6) {
-        y = y - 1;
-      }
-    }
+      //TANK
+      gb.display.drawBitmap(tankx, tanky, tank[tankstate], NOROT, FLIPH);
+      gb.display.drawBitmap(LCDWIDTH - 69, 0, heart);
+      gb.display.drawBitmap(LCDWIDTH - 39, 0, minipom);
 
-    if (gb.buttons.repeat(BTN_A, 1)) {
-      if (puissance < 30) {
-       puissance++; // ----------------------------->>>>fait baisser la barre de puissance
+      //TREX
+      gb.display.setColor(WHITE, WHITE);
+      if (direc == 0 or direc == 2) {   // TREX RIGHT SIDE -
+        gb.display.fillRect(x + 7, y, 5, 3);
       }
+      if (direc == 1 or direc == 3) {  // TREX LEFT SIDE -
+        gb.display.fillRect(x + 3, y, 5, 3);
+      }
+      gb.display.setColor(BLACK, BLACK);
+      gb.display.drawBitmap(x, y, sprites[direc]);
 
-      // ------------------------------------------------------------------
+      explode = 0;
 
-      // draw right fire ----------
 
-      if (direc == 0 or direc == 2) {
-        if (puissance < 29) {
-          if(activateRay==0){   // if chily was NOT eaten 
-          gb.display.drawBitmap(x + 17, y, fire[statefire]); // le feu n'est possible que si la barre de puissance n'est pas vide
-          }
-          if(activateRay==1){   // if chily was eaten
-          gb.display.drawBitmap(x + 10, y - 4, ray, NOROT, FLIPH); // le feu n'est possible que si la barre de puissance n'est pas vide
-          }
+      // ------- Controls  ----------------------------------------------
+
+      if (gb.buttons.repeat(BTN_RIGHT, 1)) {
+
+        Scrolling--;
+        Scrolling2 = Scrolling2 - 2;
+        tankx--;
+        pomx--;
+        if (x < LCDWIDTH - 25) {
+          x = x + 1;
         }
-        statefire = statefire + 1;
-        if ( statefire > 2) {
-          statefire = 0;
+        direc = direc + 2;
+        if ( direc > 2) {
+          direc = 0;
+        }
+      }
+      if (gb.buttons.repeat(BTN_LEFT, 1)) {
+        Scrolling++;
+        Scrolling2 = Scrolling2 + 2;
+        tankx++;
+        pomx++;
+        if (x > 0) {
+          x = x - 1;
+        }
+        direc = direc + 2;
+        if ( direc > 3) {
+          direc = 1;
+        }
+      }
+      if (gb.buttons.repeat(BTN_DOWN, 1)) {
+        if (y < LCDHEIGHT - 8) {
+          y = y + 1;
+        }
+      }
+      if (gb.buttons.repeat(BTN_UP, 1)) {
+        if (y > 6) {
+          y = y - 1;
         }
       }
 
-      // draw left fire ----------
-
-      if (direc == 1 or direc == 3) {
+      if (gb.buttons.repeat(BTN_A, 1)) {
         if (puissance < 30) {
-          if(activateRay==1){   // if chily was eaten
-            gb.display.drawBitmap(x - 81 , y - 4, ray);
+          puissance++; // ----------------------------->>>>fait baisser la barre de puissance
+          puissance++;
+          puissance--;
+        }
+
+        // ------------------------------------------------------------------
+
+        // draw right fire ----------
+
+        if (direc == 0 or direc == 2) {
+          if (puissance < 29) {
+            if (activateRay == 0) { // if chily was NOT eaten
+              gb.display.drawBitmap(x + 17, y, fire[statefire]); // le feu n'est possible que si la barre de puissance n'est pas vide
+            }
+            if (activateRay == 1) { // if chily was eaten
+              gb.display.drawBitmap(x + 10, y - 4, ray, NOROT, FLIPH); // le feu n'est possible que si la barre de puissance n'est pas vide
+            }
           }
-          if(activateRay==0){   // if chily was NOT eaten
-            gb.display.drawBitmap(x - 17, y, fire[statefire], NOROT, FLIPH); // le feu n'est possible que si la barre de puissance n'est pas vide
-          }
-        }
-
-        statefire = statefire + 1;
-        if ( statefire > 2) {
-          statefire = 0;
-        }
-      }
-    }
-
-    // when trex touch apple -----------------------------------
-
-    if (gb.collideBitmapBitmap(x, y, sprites[direc], pomx, pomy, pom)) {
-      
-      score = score + 5;
-      pomx = random(10, LCDWIDTH);
-      pomy = random(20, LCDHEIGHT - 8);
-
-      if(chilyrand==5){
-        activateRay=1; // if chily is eaten activate ray
-        RayOrFireHitBox=88;  // and change the hitbox of the fire
-        puissance=11;  // power bar to the max with the chily
-        }  
-      if(chilyrand!=5){
-        activateRay=0;  // if apple is eaten dont activate ray
-        RayOrFireHitBox=16;  // and  the hitbox of the fire 
-      } 
-      
-      chilyrand = random(1, 10);  // 1 chance / 10 to have a chily
-      if (puissance > 11) {
-        puissance = puissance - 4; //augmente la barre de puissance
-        if (puissance < 11) {
-          puissance = 11; // pour ne pas dépasser la barre de puissance
-        }
-      }
-    }
-
-
-    // when trex touch tank with HITBOX -----------------------------------
-    if (gb.collideRectRect(x, y, 16, 2, tankx, tanky, 16, 2)) {
-      if (barredevie < 60) {
-        barredevie++; //fait baisser la barre de vie
-      }
-    }
-
-
-    //     when trex burn tank -----------------------------------
-    if (gb.buttons.repeat(BTN_A, 1)) {
-      if (puissance < 30) { // le tank n'explose que si le boutton est appuillé ET que le feu crache, (donc que la barre de feu pas vide)
-        if (gb.collideRectRect(x + 17, y + 16, RayOrFireHitBox, 2, tankx, tanky + 16, 16, 2)) { // si les HITBOX tank et fire se touchent
-          if (direc == 0 || direc == 2) { // Si t rex vers la droite
-            explode = 1;
-            tankstate = 3;
-            tankx = -16;
-            tanky = random(10, LCDHEIGHT - 8);
-            score = score + 10;
+          statefire = statefire + 1;
+          if ( statefire > 2) {
+            statefire = 0;
           }
         }
-        if (gb.collideRectRect(x - 17, y + 16, RayOrFireHitBox, 2, tankx, tanky + 16, 16, 2)) { // si TREX est vers la gauche et que les HITBOX tank et fire se touchent
-          if (direc == 1 || direc == 3) { // Si t rex vers la gauche
-            explode = 1;
-            tankstate = 3;
-            tankx = -16;
-            tanky = random(10, LCDHEIGHT - 8);
-            score = score + 10;
+
+        // draw left fire ----------
+
+        if (direc == 1 or direc == 3) {
+          if (puissance < 30) {
+            if (activateRay == 1) { // if chily was eaten
+              gb.display.drawBitmap(x - 81 , y - 4, ray);
+            }
+            if (activateRay == 0) { // if chily was NOT eaten
+              gb.display.drawBitmap(x - 17, y, fire[statefire], NOROT, FLIPH); // le feu n'est possible que si la barre de puissance n'est pas vide
+            }
+          }
+
+          statefire = statefire + 1;
+          if ( statefire > 2) {
+            statefire = 0;
           }
         }
       }
+
+      // when trex touch apple -----------------------------------
+
+      if (gb.collideBitmapBitmap(x, y, sprites[direc], pomx, pomy, pom)) {
+
+        score = score + 5;
+        pomx = random(10, LCDWIDTH);
+        pomy = random(20, LCDHEIGHT - 15);
+
+        if (chilyrand == 5) {
+          activateRay = 1; // if chily is eaten activate ray
+          RayOrFireHitBox = 88; // and change the hitbox of the fire
+          puissance = 11; // power bar to the max with the chily
+        }
+        if (chilyrand != 5) {
+          activateRay = 0; // if apple is eaten dont activate ray
+          RayOrFireHitBox = 16; // and  the hitbox of the fire
+        }
+
+        chilyrand = random(1, 10);  // 1 chance / 10 to have a chily
+        if (puissance > 11) {
+          puissance = puissance - 4; //augmente la barre de puissance
+          if (puissance < 11) {
+            puissance = 11; // pour ne pas dépasser la barre de puissance
+          }
+        }
+      }
+
+
+      // when trex touch tank with HITBOX -----------------------------------
+      if (gb.collideRectRect(x, y, 16, 2, tankx, CarY, 8, 2)) {
+        if (barredevie < 60) {
+          barredevie++; //fait baisser la barre de vie
+        }
+      }
+
+
+      // when trex touch CAR with HITBOX -----------------------------------
+      if (gb.collideRectRect(x, y, 16, 2, tankx, tanky, 16, 2)) {
+        if (barredevie < 60) {
+          barredevie++; //fait baisser la barre de vie
+        }
+      }
+
+
+
+      //     when trex burn tank -----------------------------------
+      if (gb.buttons.repeat(BTN_A, 1)) {
+        if (puissance < 30) { // le tank n'explose que si le boutton est appuillé ET que le feu crache, (donc que la barre de feu pas vide)
+          if (gb.collideRectRect(x + 17, y + 16, RayOrFireHitBox, 2, tankx, tanky + 16, 16, 2)) { // si les HITBOX tank et fire se touchent
+            if (direc == 0 || direc == 2) { // Si t rex vers la droite
+              explode = 1;
+              tankstate = 3;
+              tankx = -16;
+              tanky = random(10, LCDHEIGHT - 10);
+              score = score + 10;
+            }
+          }
+          if (gb.collideRectRect(x - 17, y + 16, RayOrFireHitBox, 2, tankx, tanky + 16, 16, 2)) { // si TREX est vers la gauche et que les HITBOX tank et fire se touchent
+            if (direc == 1 || direc == 3) { // Si t rex vers la gauche
+              explode = 1;
+              tankstate = 3;
+              tankx = -16;
+              tanky = random(10, LCDHEIGHT - 10);
+              score = score + 10;
+            }
+          }
+        }
+      }
+
+      if (explode < 1) {
+        if (tankx > 0 - 16) {
+          tankx = tankx - (1 * SpeedUp);
+        }
+        if (tankx < 0 - 16) {
+          tankx = LCDWIDTH + 16;
+          tanky = random(10, LCDHEIGHT - 10);   //re init tank y
+        }
+        tankstate = tankstate + 1;
+        if (tankstate > 1) {
+          tankstate = 0;
+        }
+      }
     }
 
-    if (explode < 1) {
-      if (tankx < LCDWIDTH) {
-        tankx = tankx + 1*SpeedUp;
-      }
-      if (tankx > LCDWIDTH - 16) {
-        tankx = -16;
-        tanky = random(10, LCDHEIGHT - 8);   //re init tank y
-      }
-      tankstate = tankstate + 1;
-      if (tankstate > 1) {
-        tankstate = 0;
-      }
-    }
-}
 
-// GAME OVER
+
+// --- when TREX WALKS on CARS 
+
+   if (gb.collideBitmapBitmap(x, y, sprites[direc], Scrolling2 + LCDWIDTH + 5, CarY, cars[carstate])) {
+      gb.display.drawBitmap(Scrolling2 + LCDWIDTH + 5, CarY, CarExplode); // car explosion
+    CarY=LCDHEIGHT+20;
+    }
+
+    // GAME OVER
     if (barredevie > 59) {
       gb.display.clear();
       // gb.display.print(F("GAME OVER!"), 20);
@@ -748,23 +864,23 @@ void loop() {
       gb.display.print(score);
       gb.display.drawBitmap(10, 10, GAMEOVER);
 
-         if (gb.buttons.repeat(BTN_B, 1)) {
-            initGame();
-         }
+      if (gb.buttons.repeat(BTN_B, 1)) {
+        initGame();
+      }
     }
 
-// Next level
-    if (score >= 100*leveln) {
-       
+    // Next level
+    if (score >= 100 * leveln) {
+
       gb.display.clear();
       gb.display.print(F("LEVEL: "));
       gb.display.print(leveln);
       gb.display.drawBitmap(0, 5, logo2);
-         if (gb.buttons.repeat(BTN_B, 1)) {
-           NextLevel();
-         }
+      if (gb.buttons.repeat(BTN_B, 1)) {
+        NextLevel();
+      }
     }
-      
-    
+
+
   }  // void gb.update
 } // void loop
