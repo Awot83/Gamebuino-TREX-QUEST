@@ -20,5 +20,5 @@ i have updated T-REX QUEST with :
 - no transparency.  :)
 - and changed some others things
 
-![](https://github.com/Awot83/Gamebuino-TREX-QUEST/blob/master/TREX_QUEST_sc4.png?raw=true)
+![](https://github.com/Awot83/Gamebuino-TREX-QUEST/blob/master/TREX_QUEST_V2.0small.gif)
 
