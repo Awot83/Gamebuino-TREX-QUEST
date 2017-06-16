@@ -13,5 +13,12 @@ Features are :
 - The tanks speedup at each level
 - Add a game over screen at the end, with the score 
 
+i have updated T-REX QUEST with :
+- differential scrolling, 
+- cars, 
+- background city, 
+- no transparency.  :)
+- and changed some others things
+
 ![](https://github.com/Awot83/Gamebuino-TREX-QUEST/blob/master/TREX_QUEST_sc4.png?raw=true)
 
