@@ -1,6 +1,8 @@
 # Gamebuino-TREX-QUEST
 My first game for Gamebuino, made with my son who likes T-Rex :) 
+
 ![](https://github.com/Awot83/Gamebuino-TREX-QUEST/blob/master/TREX_QUEST_V2.0small.gif)
+
 Features are :
 - Score counter
 - Health bar
